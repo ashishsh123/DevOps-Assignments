@@ -1,0 +1,68 @@
+# defining provider
+provider "aws" {
+ access_key = "AKIAU7PYSBVTHSC6XYNM"
+    secret_key = "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"
+    region     = "us-east-1"
+}
+
+variable "vpc_id" {
+  description = "VPC ID for AWS resources."
+}
+
+variable "availability_zone_id" {
+  description = "AZ used to create EC2 instances."
+}
+
+variable "subnet_id" {
+  description = "Subnet for EC2 instances."
+}
+
+variable "ami_id" {
+  description = "AMI ID for EC2 instances."
+}
+
+variable "key_name" {
+  description = "Key Name for EC2 Instance"
+}
+
+resource "aws_security_group" "jenkins_security_group" {
+  name = "sg_jenkins"
+  description = "jenkins security group."
+  vpc_id = "${var.vpc_id}"
+}
+
+resource "aws_security_group_rule" "ssh_ingress_access" {
+  type = "ingress"
+  from_port = 22
+  to_port = 22
+  protocol = "tcp"
+  cidr_blocks = [ "0.0.0.0/0" ]
+  security_group_id = "${aws_security_group.jenkins_security_group.id}"
+}
+
+resource "aws_security_group_rule" "egress_access" {
+  type = "egress"
+  from_port = 0
+  to_port = 65535
+  protocol = "tcp"
+  cidr_blocks = [ "0.0.0.0/0" ]
+  security_group_id = "${aws_security_group.jenkins_security_group.id}"
+}
+
+resource "aws_instance" "jenkins_instance" {
+  instance_type = "t2.micro"
+  vpc_security_group_ids = [ "${aws_security_group.jenkins_security_group.id}" ]
+  associate_public_ip_address = true
+  user_data = "${file("install_nginx.sh")}"
+  tags = {
+    Name = "jenkins-instance"
+  }
+  key_name = "${var.key_name}"
+  ami = "${var.ami_id}"
+  availability_zone = "${var.availability_zone_id}"
+  subnet_id = "${var.subnet_id}"
+}
+
+output "IP" {
+  value = aws_instance.jenkins_instance.public_ip
+}

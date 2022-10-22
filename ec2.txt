@@ -1,0 +1,20 @@
+resource "aws_instance" "jenkins_instance" {
+        instance_type = "t2.micro"
+        vpc_security_group_ids = [ "sg-00c36799c2c7a977d" ]
+        tags = {
+          Name = "jenkins_instance"
+        }
+        key_name = "hotfix"
+        ami = "ami-04505e74c0741db8d"
+        user_data       = "${file("install_apache2.sh")}"
+        availability_zone = "us-east-1c"
+        subnet_id = "subnet-0224f7014f970ee00"
+}
+
+vi terraform.tfvars
+
+vpc_id = "vpc-07422ea0339907ce5"
+subnet_id = "subnet-0224f7014f970ee00"
+availability_zone_id = "us-east-1c"
+ami_id = "ami-04505e74c0741db8d"
+key_name = "hotfix"
